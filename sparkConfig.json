@@ -1,0 +1,39 @@
+[
+  {
+	  "Classification": "capacity-scheduler",
+	  "Properties": {
+		  "yarn.scheduler.capacity.resource-calculator": "org.apache.hadoop.yarn.util.resource.DominantResourceCalculator",
+  		  "spark.executor.instances":"100",
+		  "spark.yarn.am.memory":"9G",
+		  "spark.yarn.am.cores":"6"
+		}
+  	},
+  	{
+  	  "Classification": "mapred-site",
+	  "Properties": {  
+		  "spark.sql.parquet.output.committer.class":"org.apache.spark.sql.parquet.DirectParquetOutputCommitter",
+		  "spark.hadoop.mapred.output.committer.class":"com.appsflyer.spark.DirectOutputCommitter",
+		  "parquet.enable.summary-metadata":"false"
+  		}
+	},
+	{
+      "Classification": "spark-defaults",
+      "Properties": {
+		  "spark.serializer":"org.apache.spark.serializer.KryoSerializer",
+		  "spark.num.executors":"100",
+		  "spark.executor.instances":"100",
+		  "spark.executor.cores": "4",
+		  "spark.executor.memory": "5184M",
+		  "spark.yarn.am.memory":"5184M",
+		  "spark.driver.cores":"4",
+		  "spark.kryoserializer.buffer.max":"256"
+	  	}
+    },
+	{
+	    "Classification": "spark-log4j",
+	    "Properties": {
+			"log4j.rootCategory":"WARN, console"
+			
+		}
+	}
+]

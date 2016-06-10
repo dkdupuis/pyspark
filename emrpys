@@ -1,0 +1,76 @@
+#!/bin/bash
+
+function usage() {
+  cat <<EOF
+emrpys [OPTIONS] SCRIPT ARGS...
+
+Executes a pyspark SCRIPT on emr.
+
+Options:
+-h  prints usage
+-n  prints create-cluster command instead of executing it
+-k  keeps cluster up after the script terminates
+-l NAME
+    the name of the cluster
+-b BID
+    bid for spot instances (default to on-demand)
+-c NUM
+    number of core nodes (default 5)
+-t NUM
+    number of task nodes (default 0)
+EOF
+
+Example:
+    emrpys -b 0.25 -c 1 s3://***/tmp/foo.py 1000
+}
+
+name=
+maybe=
+termination="--auto-terminate"
+bid=
+core=5
+task=0
+while getopts hnkl:b:c:t: OPT; do
+  case $OPT in
+    h) usage; exit;;
+    n) maybe=echo;;
+    k) termination="--no-auto-terminate";;
+    l) name="$OPTARG";;
+    b) bid=",BidPrice=$OPTARG";;
+    c) core="$OPTARG";;
+    t) task="$OPTARG";;
+  esac
+done
+shift $(( $OPTIND - 1 ))
+
+script=$(basename "$1")
+if [[ -z "$name" ]]; then
+  name="emrpys-$script"
+fi
+
+taskgroup=
+if [[ "$task" -gt 0 ]]; then
+  taskgroup="InstanceGroupType=TASK,InstanceCount=$task,InstanceType=m3.xlarge$bid"
+fi
+
+args=
+for a in "$@"; do
+  args="$args,$a"
+done
+
+$maybe aws emr create-cluster \
+$termination \
+--name "$name" \
+--release-label emr-4.5.0 \
+--log-uri s3://aws-logs-263498236301-us-east-1/elasticmapreduce \
+--enable-debugging \
+--use-default-roles \
+--instance-groups \
+InstanceGroupType=MASTER,InstanceCount=1,InstanceType=m3.xlarge$bid \
+InstanceGroupType=CORE,InstanceCount="$core",InstanceType=m3.xlarge$bid \
+$taskgroup \
+--ec2-attributes KeyName=knife \
+--applications Name=Hadoop Name=Spark \
+--configurations https://s3.amazonaws.com/***/sparkConfigM3Xl.json \
+--bootstrap-action Path=s3://***/bootstrap/installboto.sh \
+--steps "Type=Spark,Name=$script,ActionOnFailure=CONTINUE,Args=[--deploy-mode,cluster${args}]"
