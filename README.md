@@ -26,4 +26,4 @@ Spark configurations for better performance. emrpys and launch_spark.sh expect t
 
 ## installboto.sh
 
-To install boto3 as a bootstrap step. emrpys and launch_spark.sh expect this file to be in S3
+Script to install boto3 as a bootstrap step. Boto3 is used to distribute the reading of data from s3 as Spark's native s3 read functions are not distributed. emrpys and launch_spark.sh expect this file to be in S3
